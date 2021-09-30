@@ -1,4 +1,6 @@
 import csv
+import copy
+from math import sqrt
 
 ###########################################################
 
@@ -56,7 +58,7 @@ def swapRows(A, r, i, ncols):
 def partialPivot(A, r, nrows, ncols):
     pivot = A[r][r]
     newSwap = 0
-    if pivot != 0:
+    if abs(pivot) > 10 ** (-12):
         return ("success", newSwap)
     else:
         for i in range(r+1, nrows):
@@ -144,3 +146,158 @@ def gjDeterminant(mat, ncols):
     return ((-1) ** swapCount)*k
 
 ###########################################################
+
+# Creating augmented matrix
+
+
+def aug_Mat(A, b):
+    for i in range(len(A)):
+        for j in range(len(b[i])):
+            A[i].append(b[i][j])
+    return A
+
+
+def doolittle(mat: list, b: list, nrow: int):
+    Ab = aug_Mat(mat, b)
+    ncols = ncol(Ab)
+    for i in range(nrow):
+        x = partialPivot(Ab, i, nrow, ncols)[0]
+        if x == "failed":
+            return "No solution exists"
+        else:
+            for j in range(nrow):
+                # Upper Triangular
+                if i <= j:
+                    s = sum([Ab[i][k]*Ab[k][j] for k in range(i)])
+                    Ab[i][j] = Ab[i][j] - s
+                # Lower Triangular
+                else:
+                    s = sum([Ab[i][k]*Ab[k][j] for k in range(j)])
+                    Ab[i][j] = float((Ab[i][j] - s) / Ab[j][j])
+
+    return Ab
+
+
+def crout(mat: list, b: list, nrow: int):
+    Ab = aug_Mat(mat, b)
+    ncols = ncol(Ab)
+    for i in range(nrow):
+        x = partialPivot(Ab, i, nrow, ncols)[0]
+        if x == "failed":
+            return "No solution exists"
+        else:
+            for j in range(nrow):
+                # Lower Triangular
+                if i >= j:
+                    s = sum([Ab[i][k]*Ab[k][j] for k in range(j)])
+                    Ab[i][j] = Ab[i][j] - s
+
+                # Upper Triangular
+                else:
+                    s = sum([Ab[i][k]*Ab[k][j] for k in range(i)])
+                    Ab[i][j] = float((Ab[i][j] - s) / Ab[i][i])
+
+    return Ab
+
+
+# Combined forward and backward substitution to solve the system or find inverse in case of doolittle
+def substitution_doolittle(Ab):
+    Arow = nrow(Ab)
+    bcol = ncol(Ab)-Arow
+    y = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow):
+        for j in range(bcol):
+            s = sum(Ab[i][k]*y[k][j] for k in range(i))
+            y[i][j] = (Ab[i][j+Arow]-s)
+    x = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow-1, -1, -1):
+        for j in range(bcol):
+            s = sum(Ab[i][k]*x[k][j] for k in range(i + 1, Arow))
+            x[i][j] = (y[i][j]-s)/Ab[i][i]
+    return x
+
+
+# Combined forward and backward substitution to solve the system or find inverse in case of crout
+def substitution_crout(Ab):
+    Arow = nrow(Ab)
+    bcol = ncol(Ab)-Arow
+    y = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow):
+        for j in range(bcol):
+            s = sum(Ab[i][k]*y[k][j] for k in range(i))
+            y[i][j] = (Ab[i][j+Arow]-s)/Ab[i][i]
+    x = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow-1, -1, -1):
+        for j in range(bcol):
+            s = sum(Ab[i][k]*x[k][j] for k in range(i+1, Arow))
+            x[i][j] = (y[i][j]-s)
+    return x
+
+
+def cholesky(mat: list, b: list, nrow: int):
+    Ab = aug_Mat(mat, b)
+    ncols = ncol(Ab)
+    for i in range(nrow):
+        x = partialPivot(Ab, i, nrow, ncols)[0]
+        if x == "failed":
+            return "No solution exists"
+        else:
+            for j in range(i+1):
+                # for diagonals
+                if i == j:
+                    s = sum([Ab[j][k]**2 for k in range(j)])
+                    Ab[j][j] = float(sqrt(Ab[j][j] - s))
+                # for non-diagonals
+                if i > j:
+                    s = sum([Ab[i][k]*Ab[j][k] for k in range(j)])
+                    if Ab[j][j] > 0:
+                        Ab[i][j] = float((Ab[i][j] - s)/Ab[j][j])
+                        Ab[j][i] = Ab[i][j]
+
+    return Ab
+
+# Combined forward and backward substitution to solve the system or find inverse in case of cholesky
+
+
+def substitution_cholesky(Ab):
+    Arow = nrow(Ab)
+    bcol = ncol(Ab)-Arow
+    y = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow):
+        for j in range(bcol):
+            f = sum(Ab[i][k]*y[k][j] for k in range(i))
+            y[i][j] = (Ab[i][j+Arow]-f)/Ab[i][i]
+    x = [[0 for y in range(bcol)] for x in range(Arow)]
+    for i in range(Arow-1, -1, -1):
+        for j in range(bcol):
+            f = sum(Ab[i][k]*x[k][j] for k in range(i+1, Arow))
+            x[i][j] = (y[i][j]-f)/Ab[i][i]
+    return x
+
+# solve a system of linear equations using the input method given as a parameter(defaulted to doolittle)
+
+
+def solve_LU(mat: list, b: list, nrow: int, method="doolittle"):
+    A = copy.deepcopy(mat)
+    if method == "doolittle":
+        A = doolittle(A, b, nrow)
+        x = [substitution_doolittle(A)[i][0] for i in range(nrow)]
+    elif method == "crout":
+        A = crout(A, b, nrow)
+        x = [substitution_crout(A)[i][0] for i in range(nrow)]
+    elif method == "cholesky":
+        A = cholesky(A, b, nrow)
+        x = [substitution_cholesky(A)[i][0] for i in range(nrow)]
+    for i in range(len(x)):
+        print("x_"+str(i+1)+" = "+str('{:.2f}'.format(x[i])))
+
+# for finding inverse of a matrix using doolittle's decomposition
+
+
+def lu_Inverse(A, nrow):
+    identity = []
+    for i in range(nrow):
+        row = [1 if (i == j) else 0 for j in range(nrow)]
+        identity.append(row)
+
+    return(substitution_doolittle(doolittle(A, identity, nrow)))

@@ -1,4 +1,5 @@
-import csv,copy
+import csv
+import copy
 from math import sqrt
 
 ###########################################################
@@ -145,6 +146,7 @@ def gjDeterminant(mat, ncols):
     return ((-1) ** swapCount)*k
 
 ###########################################################
+
 # Creating augmented matrix
 
 
@@ -255,6 +257,8 @@ def cholesky(mat: list, b: list, nrow: int):
     return Ab
 
 # Combined forward and backward substitution to solve the system or find inverse in case of cholesky
+
+
 def substitution_cholesky(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -270,7 +274,9 @@ def substitution_cholesky(Ab):
             x[i][j] = (y[i][j]-f)/Ab[i][i]
     return x
 
-#solve a system of linear equations using the input method given as a parameter(defaulted to doolittle)
+# solve a system of linear equations using the input method given as a parameter(defaulted to doolittle)
+
+
 def solve_LU(mat: list, b: list, nrow: int, method="doolittle"):
     A = copy.deepcopy(mat)
     if method == "doolittle":
@@ -286,6 +292,8 @@ def solve_LU(mat: list, b: list, nrow: int, method="doolittle"):
         print("x_"+str(i+1)+" = "+str('{:.2f}'.format(x[i])))
 
 # for finding inverse of a matrix using doolittle's decomposition
+
+
 def lu_Inverse(A, nrow):
     identity = []
     for i in range(nrow):
