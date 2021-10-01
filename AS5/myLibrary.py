@@ -315,18 +315,7 @@ def lu_Inverse(A, nrow):
 
 
 ############################### Root Finding ###############################
-accuracy = 10**(-5)
 
-
-def f(x):
-    if x == 0:
-        return("log(0) cannot be taken.")
-    else:
-        return math.log10(x/2) - math.sin((5*x)/2)
-
-
-""" n = 1.5
-print("\nf("+str(n)+"):", f(n)) """
 
 
 def bisection(f, a, b, accuracy=10**(-6)):
@@ -340,20 +329,26 @@ def bisection(f, a, b, accuracy=10**(-6)):
                 a -= beta*(b-a)
             else:
                 b += beta*(b-a)
-        print(a, b)
+        #print(a, b)
         flag = 0
+        maxiter = 1000
         i = 0
-        while flag == 0:
+        convergenceFn=[]
+        convergenceRoot=[]
+        while flag == 0 and i < maxiter:
             c = (a+b)/2
             if f(a)*f(c) < 0:
                 b = c
             else:
                 a = c
-            print(a, b)
+            fx=f(c)
+            convergenceFn.append(abs(fx))
+            convergenceRoot.append(c)
             i += 1
-            if (b-a)/2 < accuracy and abs(f(c)) < accuracy:
+            #Checking for convergence:
+            if (b-a)/2 < accuracy and abs(fx) < accuracy:
                 flag = 1
-        return c
+        return (c,i,convergenceFn,convergenceRoot)
 
 
 def regulaFalsi(f, a, b, accuracy1=10**(-6), accuracy2=10**(-5)):
@@ -367,47 +362,130 @@ def regulaFalsi(f, a, b, accuracy1=10**(-6), accuracy2=10**(-5)):
                 a -= beta*(b-a)
             else:
                 b += beta*(b-a)
-        print(a, b)
         flag = 0
+        maxiter = 1000
         i = 0
-        c = b - ((b-a)*f(b))/(f(b)-f(a))
-        while flag == 0:
+        convergenceFn=[]
+        convergenceRoot=[]
+        c_0=a
+        while flag == 0 and i < maxiter:
+            #Using the Regula Falsi formula:
+            c = b - ((b-a)*f(b))/(f(b)-f(a))
             if f(a)*f(c) < 0:
                 b = c
             else:
                 a = c
-            print(a, b)
+            fx=f(c)
+            convergenceFn.append(abs(fx))
+            convergenceRoot.append(c)
             i += 1
-            c1 = b - ((b-a)*f(b))/(f(b)-f(a))
-            if abs(c - c1) < accuracy1 and abs(f(c)) < accuracy2:
+            #Checking for convergence:
+            if abs(c - c_0) < accuracy1 and abs(fx) < accuracy2:
                 flag = 1
-            c = c1
-        return c
+            c_0=c
+        return (c,i,convergenceFn,convergenceRoot)
 
 
 def newtonRaphson(f, x, accuracy=10**(-6)):
     flag = 0
+    maxiter = 1000
     i = 0
+    convergenceFn=[]
+    convergenceRoot=[]
     h = 10**(-4)
-    while flag == 0:
-
-        print(i, x)
+    while flag == 0 and i < maxiter:
         x_0 = x
         Df_x = (f(x+h)-f(x))/h
         x -= f(x)/Df_x
+        fx=f(x)
+        convergenceFn.append(abs(fx))
+        convergenceRoot.append(x)
         i += 1
+        #Checking for convergence:
+        if abs(x - x_0) < accuracy and abs(fx) < accuracy:
+            flag = 1
+    return (x,i,convergenceFn,convergenceRoot)
+
+
+def g(x): return x**4 - 5*x**2 + 4
+
+
+coef = [-1, 3, 0, -4]
+
+#Deflation of polynomial to one order reduced polynomial using synthetic division:
+def deflation(p: list, root, accuracy):
+    for i in range(1, len(p)):
+        p[i] += p[i-1]*root
+    if abs(p[len(p)-1]) < accuracy:
+        return(p[0:len(p)-1])
+    else:
+        return f"\nWrong root input, {root} given for deflation !"
+
+#Finding a single root using Laguerre's method:
+def laguerre(p: list, x, accuracy):
+    n = len(p)-1
+
+    # Defining the polynomial function using the coefficients list-p:
+    def f(x):
+        return sum(p[i]*x**(len(p)-i-1) for i in range(len(p)))
+
+    maxiter = 1000
+    iter = 0
+    flag = 0
+    while flag == 0 and iter < maxiter:
+        #print(iter, x)
+        x_0 = x
+        fx = f(x)
+        if fx == 0:
+            return x  # return if already converged
+        #Finding derivatives and using Laguerre's formula:
+        h = 10**(-4)
+        Dfx = (f(x+h)-f(x))/h
+        DDfx = (f(x+h)+f(x-h)-2*f(x))/2*h
+        G = Dfx/fx
+        H = G**2-(DDfx/fx)
+        sq = sqrt((n-1)*(n*H-G**2))
+        den1 = G + sq
+        den2 = G - sq
+        if abs(den1) > abs(den2):
+            a = n/den1
+        else:
+            a = n/den2
+        x -= a
+        iter += 1
+        #Checking for convergence:
         if abs(x - x_0) < accuracy and abs(f(x)) < accuracy:
             flag = 1
-        x_0 = x
-    return x
+    return newtonRaphson(f, x_0)  # return after polishing by Newton Raphson
 
+#Finding and returning a list of all the roots using Laguerre's method:
+def rootsLaguerre(p: list, x, accuracy):
+    roots = []
+    
+    #Find all the roots except the last:
+    for i in range(len(p)-2):
+        roots.append(laguerre(p, x, accuracy))
+        p = deflation(p, roots[len(roots)-1], accuracy)
 
+    # last root is found from the last monomial based on the sign of coefficient of x
+    if p[0] == -1:
+        roots.append(p[1])
+    else:
+        roots.append(-p[1])
+    return sorted(roots)
+
+""" 
+accuracy = 10**(-5)
+a = -1
+print(rootsLaguerre(coef1, a, accuracy))  # , 2.01, accuracy
 print("\n")
-a = 1.4
-b = 2.1
+
+b = 2.1 """
+
 """ print(bisection(f, a, b, accuracy)) """
 """ print(regulaFalsi(f, a, b, accuracy)) """
-print(newtonRaphson(f, a, accuracy))
+""" print("\nNR")
+print(newtonRaphson(h, a, accuracy)) """
 
 """ 
 # 100 linearly spaced numbers
