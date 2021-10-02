@@ -4,9 +4,13 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 accuracy = 10**(-5)
+# Initial bracket for Bisection and Regula Falsi:
 a = -1
 b = 0
+# Initial guess for Newton Raphson:
 x = 0.0
+
+# Define the input the function here:
 
 
 def f(x):

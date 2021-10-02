@@ -462,14 +462,23 @@ def laguerre(p: list, x, accuracy):
 
 def rootsLaguerre(p: list, x, accuracy):
     roots = []
-
+    #The following lines of code will strip the list-p upto the first non-zero term so as to avoid errors later:
+    flag=0
+    i=k=0
+    while i<len(p)-1 and flag==0:
+        if p[i]==0:
+            k+=1
+        else:
+            flag=1
+        i+=1
+    p=p[k:len(p)]
     # Find all the roots except the last:
     for i in range(len(p)-2):
         root=laguerre(p, x, accuracy)
         roots.append(root)
         p = deflation(p, roots[len(roots)-1], accuracy)
 
-    # last root is found from the last monomial based on the sign of coefficient of x
+    # Last root is found from the last monomial based on the sign of coefficient of x
     if p[0] == -1:
         roots.append(p[1])
     else:

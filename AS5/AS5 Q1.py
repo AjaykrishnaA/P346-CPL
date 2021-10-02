@@ -4,8 +4,11 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 accuracy = 10**(-5)
+# Initial bracket for both Bisection and Regula Falsi:
 a = 1.6
 b = 2.4
+
+# Define the input the function here:
 
 
 def f(x):

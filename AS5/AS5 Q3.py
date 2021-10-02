@@ -1,13 +1,15 @@
 import myLibrary as Lib
 
 accuracy = 10**(-5)
-
-coef1 = [-1, 3, 0, -4]
+#Define the polynomial by a list of coefficients in descending order of the degree, the last being constant term:
 coef = [1, 0, -5, 0, 4]
+# Initial guess:
 x = 2.1
 
-
+# The following code is to print the polynomial from the coef{coefficient} list:
 # function to convert to superscript:
+
+
 def get_super(x):
     normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
     super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
@@ -15,8 +17,7 @@ def get_super(x):
     return x.translate(res)
 
 
-print("\n")
-print("The input polynomial is :")
+print("\nThe input polynomial is :")
 terms = []
 for i in range(len(coef)):
     if coef[i] != 0:
