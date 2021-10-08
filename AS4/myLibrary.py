@@ -67,7 +67,6 @@ def partialPivot(A, r, nrows, ncols):
                 swapRows(A, r, i, ncols)
                 newSwap += 1
                 return ("success", newSwap)
-                break
     if pivot == 0:
         return ("failed", newSwap)
 
@@ -174,7 +173,6 @@ def doolittle(mat: list, b: list, nrow: int):
                 else:
                     s = sum([Ab[i][k]*Ab[k][j] for k in range(j)])
                     Ab[i][j] = float((Ab[i][j] - s) / Ab[j][j])
-
     return Ab
 
 

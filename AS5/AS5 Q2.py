@@ -9,8 +9,26 @@ a = -1
 b = 0
 # Initial guess for Newton Raphson:
 x = 0.0
-
+y = .00001
 # Define the input the function here:
+
+
+""" def my_factorial(n):
+    fact = 1
+    for i in range(n):
+        fact = fact*(i+1)
+    return fact
+
+
+def my_exp(x, n: int):
+    s = 0
+    for i in range(n):
+        a_n = ((i))*x**(i)/my_factorial(i)  # n_th term
+        s = s + a_n
+    return s
+
+
+def h(x): return (x-5)*my_exp(x, 20)+5 """
 
 
 def f(x):

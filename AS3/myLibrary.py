@@ -65,7 +65,6 @@ def partialPivot(A, r, nrows, ncols):
                 swapRows(A, r, i, ncols)
                 newSwap += 1
                 return ("success", newSwap)
-                break
     if pivot == 0:
         return ("failed", newSwap)
 
@@ -75,7 +74,8 @@ def guassJordan(mat, nrows, ncols):
     for r in range(nrows):
         x = partialPivot(A, r, nrows, ncols)[0]
         if x == "failed":
-            return "No solution exists"
+            print("No solution exists")
+            return
         else:
             for c in range(ncols-1, r-1, -1):
                 A[r][c] = A[r][c]/A[r][r]
@@ -100,7 +100,7 @@ def solve(mat, nrows, ncols):
         var_holder = {}
         for i in range(nrows):
             var_holder['x_' +
-                       str(i+1)] = float('{:.2f}'.format(res[i][ncols-1]))
+                       str(i+1)] = float('{:.2f}'.format(res[i][ncols-1]).replace('-0.0', '0.0'))
         locals().update(var_holder)
 
         for i in range(nrows):
