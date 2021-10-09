@@ -1,8 +1,19 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
 import csv
 import copy
 from math import sqrt
 
-###########################################################
+# Contents:
+# 1. Matrix Operations
+# 2. Guass-Jordan
+# 3. LU Decomposition
+# 4. Root Finding
+# 5. Numerical Integration
+
+
+############################### Matrix Operations ###############################
 
 
 def getMatFromFile(mat_name: str):
@@ -46,7 +57,7 @@ def matMult(matA, matB):
         print("\nIndexes do not match for matrix multiplication of %s and %s!" % (
             str(matA), str(matB)))
 
-###########################################################
+############################### Guass-Jordan ###############################
 
 
 def swapRows(A, r, i, ncols):
@@ -145,7 +156,7 @@ def gjDeterminant(mat, ncols):
         k *= A[i][i]
     return ((-1) ** swapCount)*k
 
-###########################################################
+############################### LU Decomposition ###############################
 
 # Creating augmented matrix
 
@@ -200,7 +211,7 @@ def crout(mat: list, b: list, nrow: int):
     return Ab
 
 
-# Combined forward and backward substitution to solve the system or find inverse in case of doolittle
+# Combined forward and backward substitution to solve the system or find inverse; in case of doolittle
 def substitution_doolittle(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -217,7 +228,7 @@ def substitution_doolittle(Ab):
     return x
 
 
-# Combined forward and backward substitution to solve the system or find inverse in case of crout
+# Combined forward and backward substitution to solve the system or find inverse; in case of crout
 def substitution_crout(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -256,9 +267,7 @@ def cholesky(mat: list, b: list, nrow: int):
 
     return Ab
 
-# Combined forward and backward substitution to solve the system or find inverse in case of cholesky
-
-
+# Combined forward and backward substitution to solve the system or find inverse; in case of cholesky
 def substitution_cholesky(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -301,3 +310,200 @@ def lu_Inverse(A, nrow):
         identity.append(row)
 
     return(substitution_doolittle(doolittle(A, identity, nrow)))
+
+
+############################### Root Finding ###############################
+
+
+def bisection(f, a, b, accuracy=10**(-6)):
+    if a > b:
+        print("\nInput a>b ! Choose a different interval such that a<b.")
+        return
+    else:
+        beta = 1.5
+        # Bracketing
+        while f(a)*f(b) > 0:
+            if abs(f(a)) < abs(f(b)):
+                a -= beta*(b-a)
+            else:
+                b += beta*(b-a)
+        #print(a, b)
+        flag = 0
+        maxiter = 1000
+        i = 0
+        convergenceFn = []
+        convergenceRoot = []
+        while flag == 0 and i < maxiter:
+            c = (a+b)/2
+            if f(a)*f(c) < 0:
+                b = c
+            else:
+                a = c
+            fx = f(c)
+            convergenceFn.append(abs(fx))
+            convergenceRoot.append(c)
+            i += 1
+            # Checking for convergence:
+            if (b-a)/2 < accuracy and abs(fx) < accuracy:
+                flag = 1
+        return (c, i, convergenceFn, convergenceRoot)
+
+
+def regulaFalsi(f, a, b, accuracy1=10**(-6), accuracy2=10**(-5)):
+    if a > b:
+        print("\nInput a>b ! Choose a different interval such that a<b.")
+        return
+    else:
+        beta = 1.5
+        # Bracketing
+        while f(a)*f(b) > 0:
+            if abs(f(a)) < abs(f(b)):
+                a -= beta*(b-a)
+            else:
+                b += beta*(b-a)
+        flag = 0
+        maxiter = 1000
+        i = 0
+        convergenceFn = []
+        convergenceRoot = []
+        c_0 = a
+        while flag == 0 and i < maxiter:
+            # Using the Regula Falsi formula:
+            c = b - ((b-a)*f(b))/(f(b)-f(a))
+            if f(a)*f(c) < 0:
+                b = c
+            else:
+                a = c
+            fx = f(c)
+            convergenceFn.append(abs(fx))
+            convergenceRoot.append(c)
+            i += 1
+            # Checking for convergence:
+            if abs(c - c_0) < accuracy1 and abs(fx) < accuracy2:
+                flag = 1
+            c_0 = c
+        return (c, i, convergenceFn, convergenceRoot)
+
+
+def newtonRaphson(f, x, accuracy=10**(-6)):
+    flag = 0
+    maxiter = 1000
+    i = 0
+    convergenceFn = []
+    convergenceRoot = []
+    h = 10**(-4)
+    while flag == 0 and i < maxiter:
+        x_0 = x
+        Df_x = (f(x+h)-f(x))/h
+        x -= f(x)/Df_x
+        fx = f(x)
+        convergenceFn.append(abs(fx))
+        convergenceRoot.append(x)
+        i += 1
+        # Checking for convergence:
+        if abs(x - x_0) < accuracy and abs(fx) < accuracy:
+            flag = 1
+    return (x, i, convergenceFn, convergenceRoot)
+
+
+# Deflation of polynomial to one order reduced polynomial using synthetic division:
+def deflation(p: list, root, accuracy):
+    for i in range(1, len(p)):
+        p[i] += p[i-1]*root
+    if abs(p[len(p)-1]) < accuracy:
+        return(p[0:len(p)-1])
+    else:
+        print( f"\nWrong root input, {root} given for deflation !")
+        return
+
+# Finding a single root using Laguerre's method:
+
+
+def laguerre(p: list, x, accuracy):
+    n = len(p)-1
+
+    # Defining the polynomial function using the coefficients list-p:
+    def f(x):
+        return sum(p[i]*x**(len(p)-i-1) for i in range(len(p)))
+
+    maxiter = 1000
+    iter = 0
+    flag = 0
+    while flag == 0 and iter < maxiter:
+        #print(iter, x)
+        x_0 = x
+        fx = f(x)
+        if fx == 0:
+            return x  # return if already converged
+        # Finding derivatives and using Laguerre's formula:
+        h = 10**(-4)
+        Dfx = (f(x+h)-f(x))/h
+        DDfx = (f(x+h)+f(x-h)-2*f(x))/2*h
+        G = Dfx/fx
+        H = G**2-(DDfx/fx)
+        sq = sqrt((n-1)*(n*H-G**2))
+        den1 = G + sq
+        den2 = G - sq
+        if abs(den1) > abs(den2):
+            a = n/den1
+        else:
+            a = n/den2
+        x -= a
+        iter += 1
+        # Checking for convergence:
+        if abs(x - x_0) < accuracy and abs(f(x)) < accuracy:
+            flag = 1
+    return newtonRaphson(f, x_0)[0]  # return after polishing by Newton Raphson
+
+# Finding and returning a list of all the roots using Laguerre's method:
+
+
+def rootsLaguerre(p: list, x, accuracy):
+    roots = []
+    #The following lines of code will strip the list-p upto the first non-zero term so as to avoid errors later:
+    flag=0
+    i=k=0
+    while i<len(p)-1 and flag==0:
+        if p[i]==0:
+            k+=1
+        else:
+            flag=1
+        i+=1
+    p=p[k:len(p)]
+    # Find all the roots except the last:
+    for i in range(len(p)-2):
+        root=laguerre(p, x, accuracy)
+        roots.append(root)
+        p = deflation(p, roots[len(roots)-1], accuracy)
+
+    # Last root is found from the last monomial based on the sign of coefficient of x
+    if p[0] == -1:
+        roots.append(p[1])
+    else:
+        roots.append(-p[1])
+    return sorted(roots)
+
+
+""" 
+
+# 100 linearly spaced numbers
+x = np.linspace(1, 3, 100)
+
+# the function, which is y = x^2 here
+y = [math.log(i/2) - math.sin((5*i)/2) for i in x]
+
+# setting the axes at the centre
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.spines['left'].set_position('center')
+ax.spines['bottom'].set_position('zero')
+ax.spines['right'].set_color('none')
+ax.spines['top'].set_color('none')
+ax.xaxis.set_ticks_position('bottom')
+ax.yaxis.set_ticks_position('left')
+
+# plot the function
+plt.plot(x, y, 'r')
+
+# show the plot
+plt.show() """

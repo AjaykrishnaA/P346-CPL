@@ -211,7 +211,7 @@ def crout(mat: list, b: list, nrow: int):
     return Ab
 
 
-# Combined forward and backward substitution to solve the system or find inverse in case of doolittle
+# Combined forward and backward substitution to solve the system or find inverse; in case of doolittle
 def substitution_doolittle(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -228,7 +228,7 @@ def substitution_doolittle(Ab):
     return x
 
 
-# Combined forward and backward substitution to solve the system or find inverse in case of crout
+# Combined forward and backward substitution to solve the system or find inverse; in case of crout
 def substitution_crout(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow
@@ -267,9 +267,7 @@ def cholesky(mat: list, b: list, nrow: int):
 
     return Ab
 
-# Combined forward and backward substitution to solve the system or find inverse in case of cholesky
-
-
+# Combined forward and backward substitution to solve the system or find inverse; in case of cholesky
 def substitution_cholesky(Ab):
     Arow = nrow(Ab)
     bcol = ncol(Ab)-Arow

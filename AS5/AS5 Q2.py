@@ -27,7 +27,6 @@ def my_exp(x, n: int):
         s = s + a_n
     return s
 
-
 def h(x): return (x-5)*my_exp(x, 20)+5 """
 
 
